@@ -23,15 +23,6 @@ func callHello(out clif.Output) {
 	out.Printf("Hello <mine>World<reset>\n")
 }
 
-func callStyles(out clif.Output) {
-	for token, _ := range clif.DefaultStyles {
-		if token == "mine" {
-			continue
-		}
-		out.Printf("Token \\<%s>: <%s>%s<reset>\n", token, token, token)
-	}
-}
-
 func callFoo(c *clif.Command, out clif.Output, custom1 exampleInterface, custom2 *exampleStruct) {
 	out.Printf("Hello %s, how is the\n", c.Argument("name").String(), )
 	// if m := c.Argument("more-names").Strings(); m != nil && len(m) > 0 {
@@ -56,6 +47,24 @@ func setStyle(style string, c *clif.Cli) {
     auth.OpenLogin()
 }
 
+func deploy(c *clif.Command) {
+	fmt.Println("you're in the deploy func")
+	name := c.Argument("name").String()
+		fmt.Println("my name is ", name)
+}
+
+func cb(c *clif.Command, out clif.Output) {
+	out.Printf("Called %s\n", c.Name)
+	name := c.Argument("name").String()
+
+	if name == "" {
+		fmt.Println("i have no name")
+	} else {
+		fmt.Println("my name is ", name)
+	}
+	
+}
+
 func main() {
   setStyle("debug", nil)
   
@@ -69,31 +78,35 @@ func main() {
 		RegisterAs(reflect.TypeOf((*exampleInterface)(nil)).Elem().String(), &exampleStruct{"bar2"}).
 		New("hello", "The obligatory hello world", callHello)
 
-	styleArg := clif.NewArgument("style", "Name of a style. Available: default, sunburn, winter", "default", true, false).
-		SetParse(func(name, value string) (string, error) { setStyle(value, c); return value, nil })
-	c.Add(clif.NewCommand("styles", "Print all color style tokens", callStyles).AddArgument(styleArg))
-
 	// customize error handler
 	clif.Die = func(msg string, args ...interface{}) {
 		c.Output().Printf("<error>Everyting went wrong: %s<reset>\n\n", fmt.Sprintf(msg, args...))
 		clif.Exit(1)
 	}
 
+	cmd := clif.NewCommand("deploy", "A description", cb).
+	// Follows the format of name/description/default string/required (true/false)/multiple options (true/false)
+	NewArgument("name", "Name for greeting", "", false, false)
+
+	c.Add(cmd)
 	// build & add a complex command
-	cmd := clif.NewCommand("foo", "It does foo", callFoo).
+	cmd = clif.NewCommand("foo", "It does foo", callFoo).
 		NewArgument("name", "Name for greeting", "", true, false).
 		NewArgument("more-names", "And more names for greeting", "", false, true)
 
 	c.Add(cmd)
 
-	cb := func(c *clif.Command, out clif.Output) {
-		out.Printf("Called %s\n", c.Name)
-	}
+	
 	c.New("bar:baz", "A grouped command", cb).
 		New("bar:zoing", "Another grouped command", cb).
 		New("hmm:huh", "Yet another grouped command", cb).
+		New("hmm:uhm", "And yet another grouped command", cb).
 		New("hmm:uhm", "And yet another grouped command", cb)
+		// NewArgument("name", "Name for greeting", "", true, false).
+		// New("name", "deploy name", cb)
 
+	
+	c.Add(cmd)
 	// execute the main loop
 	c.Run()
   
