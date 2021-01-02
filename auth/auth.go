@@ -6,6 +6,7 @@ import (
 	"strings"
 	"io/ioutil"
 	// "example.org/utils"
+	"github.com/skratchdot/open-golang/open"
 	. "fmt"
 	"encoding/json"
 )
@@ -40,5 +41,5 @@ func GetAuth() {
 }
 
 func OpenLogin() {
-	Println("1")
+	open.Run("https://google.com/")
 }
